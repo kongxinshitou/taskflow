@@ -1,6 +1,6 @@
 {
   "name": "taskflow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Personal task management desktop app",
   "main": "out/main/main.js",
   "author": "TaskFlow",
