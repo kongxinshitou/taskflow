@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { taskAPI, type Task, type TaskFilter, type CreateTaskInput, type UpdateTaskInput } from '../utils/ipc'
+import type { Status } from '../utils/ipc'
 import { message } from 'antd'
 
 interface TaskState {

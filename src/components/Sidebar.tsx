@@ -14,15 +14,18 @@ import {
   EditOutlined,
   DeleteOutlined,
   SettingOutlined,
-  ProjectOutlined
+  ProjectOutlined,
+  CheckCircleOutlined,
+  LogoutOutlined
 } from '@ant-design/icons'
 import { useProjectStore } from '../store/projectStore'
 import { useTaskStore } from '../store/taskStore'
+import { useAuthStore } from '../store/authStore'
 import ProjectForm from './ProjectForm'
 import type { Project } from '../utils/ipc'
 
 interface SidebarProps {
-  onNavigate: (page: 'home' | 'project' | 'settings', projectId?: string) => void
+  onNavigate: (page: 'home' | 'project' | 'settings' | 'activity', projectId?: string) => void
   currentPage: string
   currentProjectId?: string | null
 }
@@ -30,6 +33,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, currentPage, currentProjectId }) => {
   const { projects, deleteProject } = useProjectStore()
   const { tasks } = useTaskStore()
+  const { user, logout } = useAuthStore()
   const [formOpen, setFormOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
 
@@ -127,6 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, currentPage, currentProje
 
       {/* Navigation */}
       {navItem('home', <HomeOutlined />, 'Today', todayCount, () => onNavigate('home'))}
+      {navItem('activity', <CheckCircleOutlined />, '完成记录', undefined, () => onNavigate('activity'))}
 
       {/* Projects section */}
       <div
@@ -270,6 +275,34 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, currentPage, currentProje
           'Settings',
           undefined,
           () => onNavigate('settings')
+        )}
+        <div
+          onClick={logout}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            color: '#8c8c8c',
+            transition: 'background 0.15s',
+            marginTop: 4
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.background = '#f5f5f5'
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+          }}
+        >
+          <LogoutOutlined />
+          <span style={{ fontSize: 14 }}>退出登录</span>
+        </div>
+        {user && (
+          <div style={{ padding: '4px 12px', fontSize: 12, color: '#bfbfbf', marginTop: 8 }}>
+            {user.username}
+          </div>
         )}
       </div>
 

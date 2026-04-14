@@ -1,0 +1,7 @@
+taskflow.db
+taskflow.db-wal
+taskflow.db-shm
+taskflow-server
+taskflow-mcp
+tmp/
+*.exe

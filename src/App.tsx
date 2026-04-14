@@ -1,24 +1,32 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { ConfigProvider, App as AntApp, message } from 'antd'
+import { ConfigProvider, App as AntApp, Spin } from 'antd'
 import { useProjectStore } from './store/projectStore'
 import { useTaskStore } from './store/taskStore'
+import { useAuthStore } from './store/authStore'
 import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import ProjectDetail from './pages/ProjectDetail'
 import Settings from './pages/Settings'
+import ActivityLog from './pages/ActivityLog'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import QuickAddBar from './components/QuickAddBar'
+import { useScheduler } from './hooks/useScheduler'
 
-type Page = 'home' | 'project' | 'settings'
+type Page = 'home' | 'project' | 'settings' | 'activity'
 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home')
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
+  // Start due-date notification scheduler
+  useScheduler()
+
   const { fetchProjects } = useProjectStore()
   const { fetchTasks } = useTaskStore()
 
-  const handleNavigate = useCallback((page: Page | 'home' | 'project' | 'settings', projectId?: string) => {
+  const handleNavigate = useCallback((page: Page | 'home' | 'project' | 'settings' | 'activity', projectId?: string) => {
     setCurrentPage(page as Page)
     setCurrentProjectId(projectId ?? null)
   }, [])
@@ -64,6 +72,8 @@ const AppContent: React.FC = () => {
             onProjectDeleted={() => handleNavigate('home')}
           />
         )
+      case 'activity':
+        return <ActivityLog />
       case 'settings':
         return <Settings />
       default:
@@ -105,6 +115,43 @@ const AppContent: React.FC = () => {
   )
 }
 
+// Auth wrapper: Electron without token uses local data, Web without token must login
+const isElectron = typeof window !== 'undefined' && !!window.electronAPI
+
+const AuthWrapper: React.FC = () => {
+  const { token, initialized, init } = useAuthStore()
+  const [showRegister, setShowRegister] = useState(false)
+
+  useEffect(() => {
+    // Only verify token when logged in; skip auth init for Electron local mode
+    if (isElectron && !localStorage.getItem('taskflow_token')) return
+    init()
+  }, [])
+
+  if (!initialized && (token || !isElectron)) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Spin size="large" />
+      </div>
+    )
+  }
+
+  // No token in Electron → use local data directly
+  if (!token && isElectron) {
+    return <AppContent />
+  }
+
+  // No token in Web → show login/register
+  if (!token) {
+    if (showRegister) {
+      return <Register onSwitchToLogin={() => setShowRegister(false)} />
+    }
+    return <Login onSwitchToRegister={() => setShowRegister(true)} />
+  }
+
+  return <AppContent />
+}
+
 const App: React.FC = () => {
   return (
     <ConfigProvider
@@ -117,7 +164,7 @@ const App: React.FC = () => {
       }}
     >
       <AntApp>
-        <AppContent />
+        <AuthWrapper />
       </AntApp>
     </ConfigProvider>
   )

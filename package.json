@@ -7,7 +7,9 @@
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:web": "vite --config vite.config.ts",
     "build": "electron-vite build",
+    "build:web": "vite --config vite.config.ts build",
     "build:win": "npm run build && electron-builder --win",
     "preview": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps"
@@ -18,8 +20,9 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@electron-toolkit/utils": "^3.0.0",
     "antd": "^5.14.0",
+    "axios": "^1.15.0",
     "better-sqlite3": "^9.4.3",
-    "dayjs": "^1.11.10",
+    "dayjs": "^1.11.20",
     "electron-store": "^8.2.0",
     "node-cron": "^3.0.3",
     "react": "^18.2.0",

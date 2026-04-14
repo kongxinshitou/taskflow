@@ -99,7 +99,11 @@ const electronAPI = {
     const handler = (_event: Electron.IpcRendererEvent, projectId: string) => callback(projectId)
     ipcRenderer.on('navigate-to-project', handler)
     return () => ipcRenderer.removeListener('navigate-to-project', handler)
-  }
+  },
+
+  // Native notification from renderer
+  sendNotification: (data: { title: string; body: string }): Promise<void> =>
+    ipcRenderer.invoke('notification:send', data)
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

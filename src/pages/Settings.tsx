@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Typography,
   Card,
@@ -6,21 +6,55 @@ import {
   Divider,
   Space,
   Descriptions,
+  Input,
   message as antMessage
 } from 'antd'
 import {
   ExportOutlined,
   InfoCircleOutlined,
-  DatabaseOutlined
+  DatabaseOutlined,
+  CloudServerOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons'
 import { dataAPI } from '../utils/ipc'
+import { getApiBaseUrl, setApiBaseUrl } from '../utils/api'
 import { useProjectStore } from '../store/projectStore'
 import { useTaskStore } from '../store/taskStore'
+import { useAuthStore } from '../store/authStore'
 
 const Settings: React.FC = () => {
   const [exporting, setExporting] = useState(false)
+  const [serverUrl, setServerUrl] = useState(getApiBaseUrl())
+  const [testing, setTesting] = useState(false)
   const { projects } = useProjectStore()
   const { tasks } = useTaskStore()
+  const { token } = useAuthStore()
+
+  useEffect(() => {
+    setServerUrl(getApiBaseUrl())
+  }, [])
+
+  const handleTestConnection = async () => {
+    setTesting(true)
+    try {
+      const res = await fetch(`${serverUrl.replace(/\/+$/, '')}/auth/me`)
+      // 401 means server is reachable but needs auth — that's OK
+      if (res.status === 401 || res.status === 200) {
+        antMessage.success('连接成功')
+      } else {
+        antMessage.warning(`服务器响应异常：${res.status}`)
+      }
+    } catch {
+      antMessage.error('连接失败，请检查地址')
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const handleSaveUrl = () => {
+    setApiBaseUrl(serverUrl)
+    antMessage.success('服务器地址已保存')
+  }
 
   const handleExport = async () => {
     setExporting(true)
@@ -93,6 +127,40 @@ const Settings: React.FC = () => {
         </div>
       </Card>
 
+      {/* Server settings */}
+      <Card
+        title={
+          <Space>
+            <CloudServerOutlined style={{ color: '#1677ff' }} />
+            服务器设置
+          </Space>
+        }
+        style={{ marginBottom: 20 }}
+      >
+        <Typography.Text style={{ color: '#8c8c8c', display: 'block', marginBottom: 12 }}>
+          配置 TaskFlow 后端 API 服务器地址。登录后将使用云端数据，未登录时（Electron）使用本地数据。
+        </Typography.Text>
+        <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
+          <Input
+            value={serverUrl}
+            onChange={(e) => setServerUrl(e.target.value)}
+            placeholder="http://localhost:8080/api"
+          />
+          <Button onClick={handleTestConnection} loading={testing}>
+            测试连接
+          </Button>
+          <Button type="primary" onClick={handleSaveUrl}>
+            保存
+          </Button>
+        </Space.Compact>
+        <Space>
+          <CheckCircleOutlined style={{ color: token ? '#52c41a' : '#faad14' }} />
+          <Typography.Text style={{ color: '#8c8c8c' }}>
+            当前数据源：{token ? `云端 (${getApiBaseUrl()})` : '本地 (Electron SQLite)'}
+          </Typography.Text>
+        </Space>
+      </Card>
+
       {/* About section */}
       <Card
         title={
@@ -103,10 +171,10 @@ const Settings: React.FC = () => {
         }
       >
         <Descriptions column={1} size="small">
-          <Descriptions.Item label="版本">1.0.0</Descriptions.Item>
+          <Descriptions.Item label="版本">1.0.1</Descriptions.Item>
           <Descriptions.Item label="平台">Windows（Electron 28）</Descriptions.Item>
           <Descriptions.Item label="数据存储">
-            SQLite — %APPDATA%/taskflow/taskflow.db
+            {token ? `云端服务器 — ${getApiBaseUrl()}` : '本地 — %APPDATA%/taskflow/taskflow.db'}
           </Descriptions.Item>
           <Descriptions.Item label="全局快捷键">
             <Space direction="vertical" size={4}>
