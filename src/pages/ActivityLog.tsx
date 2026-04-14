@@ -166,6 +166,7 @@ const ActivityLog: React.FC = () => {
                   </div>
                 )
               }))}
+            />
           </Card>
         ))
       )}
